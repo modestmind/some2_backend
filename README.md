@@ -4,7 +4,7 @@
 
 ### Base URL
 ```
-http://<host>:<port>/api
+https://some2-backend.onrender.com
 ```
 
 ### 인증
