@@ -22,11 +22,11 @@ describe("UserService - getMe", () => {
     const userService = createUserService(mockFindUserById);
 
     // getMe 호출
-    const result = await userService.getMe(1);
+    const result = await userService.getMe("1");
 
     // 검증
     expect(result).toEqual(mockUser);
-    expect(mockFindUserById).toHaveBeenCalledWith(1);
+    expect(mockFindUserById).toHaveBeenCalledWith("1");
   });
 
   it("사용자를 찾을 수 없으면 BusinessException을 던진다", async () => {
