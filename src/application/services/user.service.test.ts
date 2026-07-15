@@ -39,9 +39,9 @@ describe("UserService - getMe", () => {
     const userService = createUserService(mockFindUserById);
 
     // getMe 호출 시 예외 발생 검증
-    await expect(userService.getMe(999)).rejects.toThrow(
+    await expect(userService.getMe("999")).rejects.toThrow(
       new BusinessException("존재하지 않는 유저입니다."),
     );
-    expect(mockFindUserById).toHaveBeenCalledWith(999);
+    expect(mockFindUserById).toHaveBeenCalledWith("999");
   });
 });
