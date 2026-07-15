@@ -5,9 +5,11 @@
 .env
 .http
 .obsidian
+.claude
 docs
 test
 design
+app.http
 node_modules
 dist
 dist-ssr

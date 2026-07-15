@@ -2,10 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
-import {
-  errorMiddleware,
-  notFoundMiddleware,
-} from "./inbound/middlewares/error.middleware.js";
+import { errorMiddleware, notFoundMiddleware, } from "./inbound/middlewares/error.middleware.js";
 import { bootstrap } from "./bootstrap.js";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
