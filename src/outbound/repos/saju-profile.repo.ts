@@ -1,0 +1,49 @@
+import { ISajuProfileRepo } from "../../application/contracts/saju-profile-repo.contract.js";
+import { prismaClient } from "./prismaClinet.js";
+
+export const createSajuProfileRepo = (): ISajuProfileRepo => {
+  // 본인(is_self=Y) 사주 프로필 조회
+  const findSelfProfile: ISajuProfileRepo["findSelfProfile"] = async (userId) => {
+    return prismaClient.sajuProfile.findFirst({
+      where: { userId, isSelf: "Y" },
+    });
+  };
+
+  // 사주 프로필 신규 저장
+  const create: ISajuProfileRepo["create"] = async (params) => {
+    return prismaClient.sajuProfile.create({
+      data: {
+        userId: params.userId,
+        isSelf: params.isSelf,
+        name: params.name,
+        gender: params.gender,
+        birthDate: params.birthDate,
+        calendarType: params.calendarType,
+        birthTime: params.birthTime,
+        relationshipType: params.relationshipType,
+        relationDuration: params.relationDuration,
+        relationshipStatus: params.relationshipStatus,
+      },
+    });
+  };
+
+  // 기존 사주 프로필 수정
+  const update: ISajuProfileRepo["update"] = async (params) => {
+    return prismaClient.sajuProfile.update({
+      where: { sajuProfileId: params.sajuProfileId },
+      data: {
+        isSelf: params.isSelf,
+        name: params.name,
+        gender: params.gender,
+        birthDate: params.birthDate,
+        calendarType: params.calendarType,
+        birthTime: params.birthTime,
+        relationshipType: params.relationshipType,
+        relationDuration: params.relationDuration,
+        relationshipStatus: params.relationshipStatus,
+      },
+    });
+  };
+
+  return { findSelfProfile, create, update };
+};

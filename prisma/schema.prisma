@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  userId          String    @id @map("user_id") @db.VarChar(10)
+  snsProviderCode String?   @map("sns_provider_code") @db.VarChar(10)
+  snsUserKey      String?   @map("sns_user_key") @db.VarChar(100)
+  nickname        String?   @db.VarChar(50)
+  name            String?   @db.VarChar(50)
+  phoneNumber     String?   @map("phone_number") @db.VarChar(20)
+  status          String    @db.Char(1)
+  joinChannel     String?   @map("join_channel") @db.VarChar(50)
+  joinReferer     String?   @map("join_referer") @db.Text
+  joinDevice      String?   @map("join_device") @db.Char(1)
+  joinIp          String?   @map("join_ip") @db.VarChar(45)
+  totalAccumCash  Int       @default(0) @map("total_accum_cash")
+  cashBalance     Int       @default(0) @map("cash_balance")
+  totalAccumPoint Int       @default(0) @map("total_accum_point")
+  pointBalance    Int       @default(0) @map("point_balance")
+  referrerId      String?   @map("referrer_id") @db.VarChar(10)
+  isAppInstalled  String    @default("N") @map("is_app_installed") @db.Char(1)
+  appFcmKey       String?   @map("app_fcm_key") @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at")
+  lastLoginAt     DateTime? @map("last_login_at")
+
+  sajuProfile SajuProfile[]
+  loginLog    UserLoginLog[]
+  withdrawal  UserWithdrawal?
+
+  @@index([snsUserKey], map: "idx_user_sns_user_key")
+  @@index([phoneNumber], map: "idx_user_phone_number")
+  @@index([status], map: "idx_user_status")
+  @@index([joinIp], map: "idx_user_join_ip")
+  @@map("user")
+}
+
+model SajuProfile {
+  sajuProfileId      BigInt    @id @default(autoincrement()) @map("saju_profile_id")
+  userId             String    @map("user_id") @db.VarChar(10)
+  isSelf             String    @default("N") @map("is_self") @db.Char(1)
+  name               String    @db.VarChar(50)
+  gender             String    @db.Char(1)
+  birthDate          DateTime  @map("birth_date") @db.Date
+  calendarType       String    @map("calendar_type") @db.Char(1)
+  birthTime          DateTime? @map("birth_time") @db.Time(6)
+  relationshipType   String?   @map("relationship_type") @db.VarChar(100)
+  relationDuration   String?   @map("relation_duration") @db.VarChar(100)
+  relationshipStatus String?   @map("relationship_status") @db.Text
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId], map: "idx_saju_profile_user_id")
+  @@map("saju_profile")
+}
+
+model UserLoginLog {
+  loginLogId BigInt   @id @default(autoincrement()) @map("login_log_id")
+  userId     String   @map("user_id") @db.VarChar(10)
+  loginIp    String   @map("login_ip") @db.VarChar(45)
+  loggedAt   DateTime @default(now()) @map("logged_at")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("user_login_log")
+}
+
+model UserWithdrawal {
+  userId           String    @id @map("user_id") @db.VarChar(10)
+  withdrawStatus   String    @default("A") @map("withdraw_status") @db.Char(1)
+  withdrawalReason String?   @map("withdrawal_reason") @db.Text
+  requestIp        String    @map("request_ip") @db.VarChar(45)
+  withdrawnAt      DateTime  @default(now()) @map("withdrawn_at")
+  deletedAt        DateTime? @map("deleted_at")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("user_withdrawal")
+}
+
+model CodeGroup {
+  codeGroupId Int      @id @map("code_group_id") @db.SmallInt
+  groupName   String   @map("group_name") @db.VarChar(100)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  codeDetail CodeDetail[]
+
+  @@map("code_group")
+}
+
+model CodeDetail {
+  codeGroupId Int      @map("code_group_id") @db.SmallInt
+  codeKey     String   @map("code_key") @db.VarChar(20)
+  codeName    String   @map("code_name") @db.VarChar(80)
+  codeSubType String?  @map("code_sub_type") @db.VarChar(40)
+  sortOrder   Int?     @default(1) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  codeGroup CodeGroup @relation(fields: [codeGroupId], references: [codeGroupId], onDelete: Cascade)
+
+  @@id([codeGroupId, codeKey])
+  @@map("code_detail")
+}
