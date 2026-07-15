@@ -17,7 +17,7 @@ export const createAuthMiddleware = (verifyJwt: IJwtUtil["verifyJwt"]) => {
 
     // 토큰을 검증하고 만료기간을 체크
     try {
-      const decoded = verifyJwt(token) as { userId: number };
+      const decoded = verifyJwt(token) as { userId: string };
       req.userId = decoded.userId;
       next();
     } catch (err) {
