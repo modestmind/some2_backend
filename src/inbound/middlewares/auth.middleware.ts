@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { IJwtUtil } from "../../shared/contracts/jwt-util.contract.js";
-import { BusinessException } from "../../shared/exceptions/business.exception.js";
+import { AuthException } from "../../shared/exceptions/auth.exception.js";
 import {
   TechnicalException,
   TechnicalExceptionCode,
@@ -11,7 +11,7 @@ export const createAuthMiddleware = (verifyJwt: IJwtUtil["verifyJwt"]) => {
     // 헤더에서 토큰 추출
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      throw new BusinessException("권한이 없습니다.");
+      throw new AuthException("권한이 없습니다.");
     }
     const token = authHeader.replace("Bearer ", "");
 
@@ -23,10 +23,10 @@ export const createAuthMiddleware = (verifyJwt: IJwtUtil["verifyJwt"]) => {
     } catch (err) {
       if (err instanceof TechnicalException) {
         if (err.code === TechnicalExceptionCode.JWT_VERIFY_FAILED) {
-          throw new BusinessException("권한이 없습니다.");
+          throw new AuthException("권한이 없습니다.");
         }
         if (err.code === TechnicalExceptionCode.TOKEN_EXPIRED) {
-          throw new BusinessException(
+          throw new AuthException(
             "세션이 삭제되었습니다. 다시 로그인 해주세요.",
           );
         }

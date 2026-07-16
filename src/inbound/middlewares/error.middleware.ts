@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { AuthException } from "../../shared/exceptions/auth.exception.js";
 import { BusinessException } from "../../shared/exceptions/business.exception.js";
 import { TechnicalException } from "../../shared/exceptions/technical.exception.js";
 
@@ -16,7 +17,9 @@ export const errorMiddleware = (
   res: Response,
   next: NextFunction,
 ) => {
-  if (err instanceof BusinessException) {
+  if (err instanceof AuthException) {
+    res.status(401).json({ message: err.message });
+  } else if (err instanceof BusinessException) {
     res.status(400).json({ message: err.message });
   } else if (err instanceof TechnicalException) {
     res.status(500).json({ message: "알 수 없는 에러가 발생했어요" });

@@ -31,6 +31,7 @@ Authorization: Bearer <token>
 | 상태 코드 | 설명 |
 |---|---|
 | `200` | 요청 성공 |
+| `400` | 요청 실패 (유효성 검사 오류, 비즈니스 규칙 위반 등) |
 | `401` | 인증 실패 (토큰 없음, 만료, 유효하지 않음) |
 | `500` | 서버 내부 오류 |
 
@@ -198,8 +199,8 @@ Authorization: Bearer <token>
 | `saju_profile.name` | string | 이름 |
 | `saju_profile.gender` | string | 성별 (`M`: 남성, `F`: 여성) |
 | `saju_profile.birth_date` | string | 생년월일 (`YYYY-MM-DD`) |
-| `saju_profile.calendar_type` | string | 달력 유형 (`solar`: 양력, `lunar`: 음력, `lunar_leap`: 윤달) |
-| `saju_profile.birth_time` | string \| null | 출생 시간 (`HH:MM` 또는 `HH:MM:SS`, 모르면 `null`) |
+| `saju_profile.calendar_type` | string | 달력 유형 (`1`: 양력, `2`: 음력 평달, `3`: 음력 윤달) |
+| `saju_profile.birth_time` | string | 출생 시간 (`HH:MM` 형식, 모르면 빈 문자열 `""`) |
 | `saju_profile.relationship_type` | string \| null | 관계 유형 |
 | `saju_profile.relation_duration` | string \| null | 관계 기간 |
 | `saju_profile.relationship_status` | string \| null | 관계 상태 |
@@ -215,7 +216,7 @@ Authorization: Bearer <token>
     "name": "홍길동",
     "gender": "M",
     "birth_date": "1990-05-15",
-    "calendar_type": "solar",
+    "calendar_type": "1",
     "birth_time": "14:30",
     "relationship_type": null,
     "relation_duration": null,
@@ -289,7 +290,7 @@ Authorization: Bearer <token>
     "name": "홍길동",
     "gender": "M",
     "birth_date": "1990-05-15",
-    "calendar_type": "solar",
+    "calendar_type": "1",
     "birth_time": "14:30",
     "relationship_type": null,
     "relation_duration": null,
@@ -299,3 +300,101 @@ Authorization: Bearer <token>
   }
 }
 ```
+
+---
+
+### 상대방 사주 프로필 목록 조회
+
+로그인한 사용자가 등록한 상대방(`is_self: N`) 사주 프로필 목록을 등록일 역순으로 반환합니다.
+
+```
+GET /api/saju/profile_list
+```
+
+**Headers**
+```
+Authorization: Bearer <token>
+```
+
+**Response `200`**
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `saju_profiles` | array | 상대방 사주 프로필 목록 |
+| `saju_profiles[].saju_profile_id` | number | 프로필 ID |
+| `saju_profiles[].name` | string | 이름 |
+| `saju_profiles[].gender` | string | 성별 (`M`: 남성, `F`: 여성) |
+| `saju_profiles[].relationship_type` | string \| null | 관계 유형 |
+| `saju_profiles[].relation_duration` | string \| null | 관계 기간 |
+| `saju_profiles[].relationship_status` | string \| null | 관계 상태 |
+| `saju_profiles[].created_at` | string | 등록일시 (ISO 8601) |
+| `saju_profiles[].report_yn` | string | 리포트 생성 여부 (`Y`: 생성됨, `N`: 미생성) |
+
+```json
+{
+  "saju_profiles": [
+    {
+      "saju_profile_id": 2,
+      "name": "김철수",
+      "gender": "M",
+      "relationship_type": "썸",
+      "relation_duration": "1개월",
+      "relationship_status": "손절 고민중..",
+      "created_at": "2024-07-15T10:00:00.000Z",
+      "report_yn": "N"
+    }
+  ]
+}
+```
+
+등록된 프로필이 없는 경우:
+```json
+{
+  "saju_profiles": []
+}
+```
+
+---
+
+### 리포트 생성
+
+특정 사주 프로필의 리포트 생성을 요청합니다. 본인 소유의 프로필에 한해 `report_yn`을 `Y`로 업데이트합니다.
+
+```
+POST /api/saju/report
+```
+
+**Headers**
+```
+Authorization: Bearer <token>
+```
+
+**Request Body**
+
+| 필드 | 타입 | 필수 | 설명 |
+|---|---|---|---|
+| `saju_profile_id` | number | O | 리포트를 생성할 사주 프로필 ID |
+
+```json
+{
+  "saju_profile_id": 2
+}
+```
+
+**Response `200`**
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `saju_profile_id` | number | 업데이트된 프로필 ID |
+
+```json
+{
+  "saju_profile_id": 2
+}
+```
+
+**오류 응답 `400`**
+
+| 상황 | 메시지 |
+|---|---|
+| 존재하지 않는 프로필 ID이거나 본인 소유가 아닌 경우 | `"존재하지 않는 사주 프로필입니다."` |
