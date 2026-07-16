@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+export const createReportSchema = z.object({
+  saju_profile_id: z.number().int().positive(),
+});
+
 export const createSajuProfileSchema = z.object({
   name: z.string().min(1, "이름은 최소 1글자 이상입니다."),
   gender: z.enum(["F", "M"]),

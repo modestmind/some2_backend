@@ -9,11 +9,21 @@ export const createSajuProfileRepo = (): ISajuProfileRepo => {
     });
   };
 
+  // sajuProfileId와 userId 조건 모두 만족하는 레코드의 report_yn을 Y로 업데이트
+  const updateReportYn: ISajuProfileRepo["updateReportYn"] = async (sajuProfileId, userId) => {
+    const result = await prismaClient.sajuProfile.updateMany({
+      where: { sajuProfileId, userId },
+      data: { reportYn: "Y" },
+    });
+    return result.count;
+  };
+
   // 상대방(is_self=N) 사주 프로필 목록 조회 (등록일 역순)
   const findOtherProfiles: ISajuProfileRepo["findOtherProfiles"] = async (userId) => {
     return prismaClient.sajuProfile.findMany({
       where: { userId, isSelf: "N" },
       select: {
+        sajuProfileId: true,
         name: true,
         gender: true,
         relationshipType: true,
@@ -62,5 +72,5 @@ export const createSajuProfileRepo = (): ISajuProfileRepo => {
     });
   };
 
-  return { findSelfProfile, findOtherProfiles, create, update };
+  return { findSelfProfile, findOtherProfiles, updateReportYn, create, update };
 };

@@ -1,11 +1,14 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { SajuProfileServiceType } from "../../application/services/saju-profile.service.js";
 import { AuthMiddlewareType } from "../middlewares/auth.middleware.js";
-import { createSajuProfileSchema } from "../schemas/saju.schemas.js";
+import { createSajuProfileSchema, createReportSchema } from "../schemas/saju.schemas.js";
 import { BusinessException } from "../../shared/exceptions/business.exception.js";
 import { SajuProfile } from "../../generated/prisma/client.js";
 import { SajuProfileListItem } from "../../application/contracts/saju-profile-repo.contract.js";
 import z from "zod";
+
+const formatDate = (date: Date): string => date.toISOString().slice(0, 10);
+const formatTime = (date: Date): string => date.toISOString().slice(11, 16);
 
 // Prisma camelCase 필드를 DB 컬럼명(snake_case)으로 변환
 const toResponse = ({
@@ -28,9 +31,9 @@ const toResponse = ({
   is_self: isSelf,
   name,
   gender,
-  birth_date: birthDate,
+  birth_date: formatDate(birthDate),
   calendar_type: calendarType,
-  birth_time: birthTime,
+  birth_time: birthTime ? formatTime(birthTime) : "",
   relationship_type: relationshipType,
   relation_duration: relationDuration,
   relationship_status: relationshipStatus,
@@ -39,6 +42,7 @@ const toResponse = ({
 });
 
 const toListItemResponse = ({
+  sajuProfileId,
   name,
   gender,
   relationshipType,
@@ -47,6 +51,7 @@ const toListItemResponse = ({
   createdAt,
   reportYn,
 }: SajuProfileListItem) => ({
+  saju_profile_id: Number(sajuProfileId),
   name,
   gender,
   relationship_type: relationshipType,
@@ -60,9 +65,28 @@ export const createSajuController = (
   saveSajuProfile: SajuProfileServiceType["saveSajuProfile"],
   getMyProfile: SajuProfileServiceType["getMyProfile"],
   getProfileList: SajuProfileServiceType["getProfileList"],
+  updateReport: SajuProfileServiceType["updateReport"],
   authMiddleware: AuthMiddlewareType,
 ) => {
   const router = Router();
+
+  // 리포트 생성 (report_yn Y 업데이트)
+  router.post(
+    "/report",
+    authMiddleware,
+    async (req: Request, res: Response, next: NextFunction) => {
+      // 요청 바디 검증
+      const result = createReportSchema.safeParse(req.body);
+      if (!result.success) {
+        throw new BusinessException(z.prettifyError(result.error));
+      }
+
+      // report_yn 업데이트 후 응답
+      const sajuProfileId = BigInt(result.data.saju_profile_id);
+      await updateReport(sajuProfileId, String(req.userId!));
+      res.json({ saju_profile_id: result.data.saju_profile_id });
+    },
+  );
 
   // 상대방 사주 프로필 목록 조회
   router.get(

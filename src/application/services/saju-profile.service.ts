@@ -13,6 +13,7 @@ export const createSajuProfileService = (
   update: ISajuProfileRepo["update"],
   findSelfProfile: ISajuProfileRepo["findSelfProfile"],
   findOtherProfiles: ISajuProfileRepo["findOtherProfiles"],
+  updateReportYn: ISajuProfileRepo["updateReportYn"],
   findUserById: IUserRepo["findUserById"],
 ) => {
   // 사주 프로필 저장 (is_self Y: 기존 본인 프로필 수정 또는 신규 등록, N: 무조건 신규 등록)
@@ -79,7 +80,16 @@ export const createSajuProfileService = (
     return findOtherProfiles(userId);
   };
 
-  return { saveSajuProfile, getMyProfile, getProfileList };
+  // 리포트 생성 (report_yn Y로 업데이트)
+  const updateReport = async (sajuProfileId: bigint, userId: string) => {
+    // 업데이트된 레코드가 없으면 존재하지 않거나 소유자가 다른 경우
+    const count = await updateReportYn(sajuProfileId, userId);
+    if (count === 0) {
+      throw new BusinessException("존재하지 않는 사주 프로필입니다.");
+    }
+  };
+
+  return { saveSajuProfile, getMyProfile, getProfileList, updateReport };
 };
 
 export type SajuProfileServiceType = ReturnType<typeof createSajuProfileService>;

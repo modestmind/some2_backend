@@ -14,12 +14,13 @@ type SajuProfileData = {
 
 export type SajuProfileListItem = Pick<
   SajuProfile,
-  "name" | "gender" | "relationshipType" | "relationDuration" | "relationshipStatus" | "createdAt" | "reportYn"
+  "sajuProfileId" | "name" | "gender" | "relationshipType" | "relationDuration" | "relationshipStatus" | "createdAt" | "reportYn"
 >;
 
 export interface ISajuProfileRepo {
   findSelfProfile: (userId: string) => Promise<SajuProfile | null>;
   findOtherProfiles: (userId: string) => Promise<SajuProfileListItem[]>;
+  updateReportYn: (sajuProfileId: bigint, userId: string) => Promise<number>;
   create: (params: { userId: string } & SajuProfileData) => Promise<SajuProfile>;
   update: (params: { sajuProfileId: bigint } & SajuProfileData) => Promise<SajuProfile>;
 }

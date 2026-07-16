@@ -14,18 +14,18 @@ import { signJwt, jwtUtil } from "./shared/utils/jwt.util.js";
 export const bootstrap = () => {
 
   const { findUserBySns, createUser, findMaxUserId, findUserById } = createUserRepo();
-  const { findSelfProfile, findOtherProfiles, create: createSajuProfile, update: updateSajuProfile } = createSajuProfileRepo();
+  const { findSelfProfile, findOtherProfiles, updateReportYn, create: createSajuProfile, update: updateSajuProfile } = createSajuProfileRepo();
   const { createLoginLog } = createUserLoginLogRepo();
 
   const { login } = createAuthService( findUserBySns, createUser, findMaxUserId, signJwt, bcryptUtil, createLoginLog);
   const { getMe } = createUserService(findUserById);
-  const { saveSajuProfile, getMyProfile, getProfileList } = createSajuProfileService(createSajuProfile, updateSajuProfile, findSelfProfile, findOtherProfiles, findUserById);
+  const { saveSajuProfile, getMyProfile, getProfileList, updateReport } = createSajuProfileService(createSajuProfile, updateSajuProfile, findSelfProfile, findOtherProfiles, updateReportYn, findUserById);
 
   const authMiddleware = createAuthMiddleware(jwtUtil.verifyJwt);
 
   const { router: authRouter } = createAuthController(login, jwtUtil.verifyJwt);
   const { router: userRouter } = createUserController(getMe, authMiddleware);
-  const { router: sajuRouter } = createSajuController(saveSajuProfile, getMyProfile, getProfileList, authMiddleware);
+  const { router: sajuRouter } = createSajuController(saveSajuProfile, getMyProfile, getProfileList, updateReport, authMiddleware);
 
   return { authRouter, userRouter, sajuRouter };
 };

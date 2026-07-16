@@ -17,7 +17,7 @@ export const errorMiddleware = (
   next: NextFunction,
 ) => {
   if (err instanceof BusinessException) {
-    res.status(401).json({ message: err.message });
+    res.status(400).json({ message: err.message });
   } else if (err instanceof TechnicalException) {
     res.status(500).json({ message: "알 수 없는 에러가 발생했어요" });
     console.error(err); // 개발자에게 전송(Sentry)
