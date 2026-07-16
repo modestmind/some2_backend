@@ -9,6 +9,23 @@ export const createSajuProfileRepo = (): ISajuProfileRepo => {
     });
   };
 
+  // 상대방(is_self=N) 사주 프로필 목록 조회 (등록일 역순)
+  const findOtherProfiles: ISajuProfileRepo["findOtherProfiles"] = async (userId) => {
+    return prismaClient.sajuProfile.findMany({
+      where: { userId, isSelf: "N" },
+      select: {
+        name: true,
+        gender: true,
+        relationshipType: true,
+        relationDuration: true,
+        relationshipStatus: true,
+        createdAt: true,
+        reportYn: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  };
+
   // 사주 프로필 신규 저장
   const create: ISajuProfileRepo["create"] = async (params) => {
     return prismaClient.sajuProfile.create({
@@ -45,5 +62,5 @@ export const createSajuProfileRepo = (): ISajuProfileRepo => {
     });
   };
 
-  return { findSelfProfile, create, update };
+  return { findSelfProfile, findOtherProfiles, create, update };
 };

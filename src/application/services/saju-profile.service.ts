@@ -12,6 +12,7 @@ export const createSajuProfileService = (
   create: ISajuProfileRepo["create"],
   update: ISajuProfileRepo["update"],
   findSelfProfile: ISajuProfileRepo["findSelfProfile"],
+  findOtherProfiles: ISajuProfileRepo["findOtherProfiles"],
   findUserById: IUserRepo["findUserById"],
 ) => {
   // 사주 프로필 저장 (is_self Y: 기존 본인 프로필 수정 또는 신규 등록, N: 무조건 신규 등록)
@@ -73,7 +74,12 @@ export const createSajuProfileService = (
     return findSelfProfile(userId);
   };
 
-  return { saveSajuProfile, getMyProfile };
+  // 상대방 사주 프로필 목록 조회 (is_self = N)
+  const getProfileList = async (userId: string) => {
+    return findOtherProfiles(userId);
+  };
+
+  return { saveSajuProfile, getMyProfile, getProfileList };
 };
 
 export type SajuProfileServiceType = ReturnType<typeof createSajuProfileService>;

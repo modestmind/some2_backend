@@ -12,8 +12,14 @@ type SajuProfileData = {
   relationshipStatus: string | null;
 };
 
+export type SajuProfileListItem = Pick<
+  SajuProfile,
+  "name" | "gender" | "relationshipType" | "relationDuration" | "relationshipStatus" | "createdAt" | "reportYn"
+>;
+
 export interface ISajuProfileRepo {
   findSelfProfile: (userId: string) => Promise<SajuProfile | null>;
+  findOtherProfiles: (userId: string) => Promise<SajuProfileListItem[]>;
   create: (params: { userId: string } & SajuProfileData) => Promise<SajuProfile>;
   update: (params: { sajuProfileId: bigint } & SajuProfileData) => Promise<SajuProfile>;
 }

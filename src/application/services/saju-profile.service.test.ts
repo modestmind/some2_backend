@@ -1,7 +1,7 @@
 import { jest, describe, test, expect } from "@jest/globals";
 import { createSajuProfileService } from "./saju-profile.service.js";
 import { BusinessException } from "../../shared/exceptions/business.exception.js";
-import type { ISajuProfileRepo } from "../contracts/saju-profile-repo.contract.js";
+import type { ISajuProfileRepo, SajuProfileListItem } from "../contracts/saju-profile-repo.contract.js";
 import type { IUserRepo } from "../contracts/user-repo.contract.js";
 import type { SajuProfile, User } from "../../generated/prisma/client.js";
 
@@ -41,6 +41,7 @@ describe("saveSajuProfile", () => {
       fakeCreate,
       fakeUpdate,
       fakeFindSelfProfile,
+      jest.fn<ISajuProfileRepo["findOtherProfiles"]>(),
       fakeFindUserById,
     );
     const result = await saveSajuProfile({
@@ -115,6 +116,7 @@ describe("saveSajuProfile", () => {
       fakeCreate,
       fakeUpdate,
       fakeFindSelfProfile,
+      jest.fn<ISajuProfileRepo["findOtherProfiles"]>(),
       fakeFindUserById,
     );
     const result = await saveSajuProfile({
@@ -159,6 +161,7 @@ describe("saveSajuProfile", () => {
       fakeCreate,
       fakeUpdate,
       fakeFindSelfProfile,
+      jest.fn<ISajuProfileRepo["findOtherProfiles"]>(),
       fakeFindUserById,
     );
 
@@ -211,6 +214,7 @@ describe("saveSajuProfile", () => {
       fakeCreate,
       fakeUpdate,
       fakeFindSelfProfile,
+      jest.fn<ISajuProfileRepo["findOtherProfiles"]>(),
       fakeFindUserById,
     );
     const baseParams = {
@@ -266,6 +270,7 @@ describe("getMyProfile", () => {
       fakeCreate,
       fakeUpdate,
       fakeFindSelfProfile,
+      jest.fn<ISajuProfileRepo["findOtherProfiles"]>(),
       fakeFindUserById,
     );
     const result = await getMyProfile("1010101010");
@@ -287,6 +292,7 @@ describe("getMyProfile", () => {
       fakeCreate,
       fakeUpdate,
       fakeFindSelfProfile,
+      jest.fn<ISajuProfileRepo["findOtherProfiles"]>(),
       fakeFindUserById,
     );
     const result = await getMyProfile("1010101010");
@@ -310,9 +316,98 @@ describe("getMyProfile", () => {
       fakeCreate,
       fakeUpdate,
       fakeFindSelfProfile,
+      jest.fn<ISajuProfileRepo["findOtherProfiles"]>(),
       fakeFindUserById,
     );
 
     await expect(getMyProfile("1010101010")).rejects.toThrow("DB 연결 실패");
+  });
+});
+
+describe("getProfileList", () => {
+  test("userId에 해당하는 is_self=N 프로필 목록을 반환한다", async () => {
+    const fakeProfiles: SajuProfileListItem[] = [
+      {
+        name: "김철수",
+        gender: "M",
+        relationshipType: "연인",
+        relationDuration: "1년",
+        relationshipStatus: "고민 중",
+        createdAt: new Date("2024-06-01"),
+        reportYn: "N",
+      },
+      {
+        name: "이영희",
+        gender: "F",
+        relationshipType: null,
+        relationDuration: null,
+        relationshipStatus: null,
+        createdAt: new Date("2024-05-01"),
+        reportYn: "Y",
+      },
+    ];
+
+    const fakeFindOtherProfiles = jest
+      .fn<ISajuProfileRepo["findOtherProfiles"]>()
+      .mockResolvedValue(fakeProfiles);
+    const fakeCreate = jest.fn<ISajuProfileRepo["create"]>();
+    const fakeUpdate = jest.fn<ISajuProfileRepo["update"]>();
+    const fakeFindSelfProfile = jest.fn<ISajuProfileRepo["findSelfProfile"]>();
+    const fakeFindUserById = jest.fn<IUserRepo["findUserById"]>();
+
+    const { getProfileList } = createSajuProfileService(
+      fakeCreate,
+      fakeUpdate,
+      fakeFindSelfProfile,
+      fakeFindOtherProfiles,
+      fakeFindUserById,
+    );
+    const result = await getProfileList("1010101010");
+
+    expect(result).toEqual(fakeProfiles);
+    expect(fakeFindOtherProfiles).toHaveBeenCalledWith("1010101010");
+  });
+
+  test("is_self=N 프로필이 없으면 빈 배열을 반환한다", async () => {
+    const fakeFindOtherProfiles = jest
+      .fn<ISajuProfileRepo["findOtherProfiles"]>()
+      .mockResolvedValue([]);
+    const fakeCreate = jest.fn<ISajuProfileRepo["create"]>();
+    const fakeUpdate = jest.fn<ISajuProfileRepo["update"]>();
+    const fakeFindSelfProfile = jest.fn<ISajuProfileRepo["findSelfProfile"]>();
+    const fakeFindUserById = jest.fn<IUserRepo["findUserById"]>();
+
+    const { getProfileList } = createSajuProfileService(
+      fakeCreate,
+      fakeUpdate,
+      fakeFindSelfProfile,
+      fakeFindOtherProfiles,
+      fakeFindUserById,
+    );
+    const result = await getProfileList("1010101010");
+
+    expect(result).toEqual([]);
+    expect(fakeFindOtherProfiles).toHaveBeenCalledWith("1010101010");
+  });
+
+  test("findOtherProfiles가 reject되면 에러를 그대로 전파한다", async () => {
+    const dbError = new Error("DB 연결 실패");
+    const fakeFindOtherProfiles = jest
+      .fn<ISajuProfileRepo["findOtherProfiles"]>()
+      .mockRejectedValue(dbError);
+    const fakeCreate = jest.fn<ISajuProfileRepo["create"]>();
+    const fakeUpdate = jest.fn<ISajuProfileRepo["update"]>();
+    const fakeFindSelfProfile = jest.fn<ISajuProfileRepo["findSelfProfile"]>();
+    const fakeFindUserById = jest.fn<IUserRepo["findUserById"]>();
+
+    const { getProfileList } = createSajuProfileService(
+      fakeCreate,
+      fakeUpdate,
+      fakeFindSelfProfile,
+      fakeFindOtherProfiles,
+      fakeFindUserById,
+    );
+
+    await expect(getProfileList("1010101010")).rejects.toThrow("DB 연결 실패");
   });
 });

@@ -4,6 +4,7 @@ import { AuthMiddlewareType } from "../middlewares/auth.middleware.js";
 import { createSajuProfileSchema } from "../schemas/saju.schemas.js";
 import { BusinessException } from "../../shared/exceptions/business.exception.js";
 import { SajuProfile } from "../../generated/prisma/client.js";
+import { SajuProfileListItem } from "../../application/contracts/saju-profile-repo.contract.js";
 import z from "zod";
 
 // Prisma camelCase 필드를 DB 컬럼명(snake_case)으로 변환
@@ -37,12 +38,41 @@ const toResponse = ({
   updated_at: updatedAt,
 });
 
+const toListItemResponse = ({
+  name,
+  gender,
+  relationshipType,
+  relationDuration,
+  relationshipStatus,
+  createdAt,
+  reportYn,
+}: SajuProfileListItem) => ({
+  name,
+  gender,
+  relationship_type: relationshipType,
+  relation_duration: relationDuration,
+  relationship_status: relationshipStatus,
+  created_at: createdAt,
+  report_yn: reportYn,
+});
+
 export const createSajuController = (
   saveSajuProfile: SajuProfileServiceType["saveSajuProfile"],
   getMyProfile: SajuProfileServiceType["getMyProfile"],
+  getProfileList: SajuProfileServiceType["getProfileList"],
   authMiddleware: AuthMiddlewareType,
 ) => {
   const router = Router();
+
+  // 상대방 사주 프로필 목록 조회
+  router.get(
+    "/profile_list",
+    authMiddleware,
+    async (req: Request, res: Response, next: NextFunction) => {
+      const profiles = await getProfileList(String(req.userId!));
+      res.json({ saju_profiles: profiles.map(toListItemResponse) });
+    },
+  );
 
   // 내 사주 프로필 조회
   router.get(
