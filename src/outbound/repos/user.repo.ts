@@ -13,6 +13,10 @@ export const createUserRepo = (): IUserRepo => {
   ) => {
     const foundUser = await prismaClient.user.findFirst({
       where: { snsProviderCode, snsUserKey },
+      select: {
+        userId: true,
+        nickname: true,
+      },
     });
     return foundUser;
   };
@@ -20,6 +24,22 @@ export const createUserRepo = (): IUserRepo => {
   const findUserById: IUserRepo["findUserById"] = async (userId: string) => {
     const foundUser = await prismaClient.user.findUnique({
       where: { userId },
+      select: {
+        userId: true,
+        nickname: true,
+      },
+    });
+    return foundUser;
+  };
+
+  const findUserByIdForRefresh: IUserRepo["findUserByIdForRefresh"] = async (userId: string) => {
+    const foundUser = await prismaClient.user.findUnique({
+      where: { userId },
+      select: {
+        userId: true,
+        nickname: true,
+        refreshToken: true,
+      },
     });
     return foundUser;
   };
@@ -45,7 +65,7 @@ export const createUserRepo = (): IUserRepo => {
           lastLoginAt: params.lastLoginAt,
         },
       });
-      return newUser;
+      return { userId: newUser.userId, nickname: newUser.nickname };
     } catch (err) {
       if (err instanceof PrismaClientKnownRequestError) {
         if (err.code === "P2002") {
@@ -59,5 +79,19 @@ export const createUserRepo = (): IUserRepo => {
     }
   };
 
-  return { findUserBySns, findUserById, findMaxUserId, createUser };
+  const updateRefreshToken: IUserRepo["updateRefreshToken"] = async (userId, hashedToken) => {
+    await prismaClient.user.update({
+      where: { userId },
+      data: { refreshToken: hashedToken },
+    });
+  };
+
+  const updateLastLogin: IUserRepo["updateLastLogin"] = async (userId, lastLoginAt) => {
+    await prismaClient.user.update({
+      where: { userId },
+      data: { lastLoginAt },
+    });
+  };
+
+  return { findUserBySns, findUserById, findUserByIdForRefresh, findMaxUserId, createUser, updateRefreshToken, updateLastLogin };
 };

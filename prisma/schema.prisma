@@ -28,6 +28,7 @@ model User {
   appFcmKey       String?   @map("app_fcm_key") @db.Text
   createdAt       DateTime  @default(now()) @map("created_at")
   lastLoginAt     DateTime? @map("last_login_at")
+  refreshToken    String?   @map("refresh_token") @db.VarChar(100)
 
   sajuProfile SajuProfile[]
   loginLog    UserLoginLog[]
