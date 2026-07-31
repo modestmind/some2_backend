@@ -10,8 +10,11 @@ const config: Config = {
   extensionsToTreatAsEsm: [".ts"],
 
   // Strip the .js extension from relative imports so ts-jest can resolve the .ts source
+  // Force astronomy-engine to use its CJS build: esm/astronomy.js has export statements
+  // but no "type": "module" in its package.json, causing "Unexpected export in CJS" in Jest ESM mode
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
+    "^astronomy-engine$": "<rootDir>/node_modules/astronomy-engine/astronomy.js",
   },
 
   // Run .ts files through ts-jest in ESM mode

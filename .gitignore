@@ -8,6 +8,7 @@
 .claude
 docs
 test
+*.test.json
 design
 app.http
 node_modules

@@ -4,6 +4,16 @@ import { BusinessException } from "../../shared/exceptions/business.exception.js
 import type { ISajuProfileRepo, SajuProfileListItem } from "../contracts/saju-profile-repo.contract.js";
 import type { IUserRepo } from "../contracts/user-repo.contract.js";
 import type { SajuProfile, User } from "../../generated/prisma/client.js";
+import type { ManseInput, ManseOutput } from "../../shared/manse/manse.util.js";
+
+type CalculateSajuFn = (input: ManseInput) => ManseOutput;
+
+const FAKE_SAJU_OUTPUT: ManseOutput = {
+  yearPillar: { stem: "甲", branch: "子" },
+  monthPillar: { stem: "甲", branch: "子" },
+  dayPillar: { stem: "甲", branch: "子" },
+  hourPillar: null,
+};
 
 const createMocks = (overrides?: {
   create?: jest.Mock<ISajuProfileRepo["create"]>;
@@ -12,6 +22,7 @@ const createMocks = (overrides?: {
   findOtherProfiles?: jest.Mock<ISajuProfileRepo["findOtherProfiles"]>;
   updateReportYn?: jest.Mock<ISajuProfileRepo["updateReportYn"]>;
   findUserById?: jest.Mock<IUserRepo["findUserById"]>;
+  calculateSaju?: jest.Mock<CalculateSajuFn>;
 }) => ({
   create: overrides?.create ?? jest.fn<ISajuProfileRepo["create"]>(),
   update: overrides?.update ?? jest.fn<ISajuProfileRepo["update"]>(),
@@ -19,6 +30,7 @@ const createMocks = (overrides?: {
   findOtherProfiles: overrides?.findOtherProfiles ?? jest.fn<ISajuProfileRepo["findOtherProfiles"]>(),
   updateReportYn: overrides?.updateReportYn ?? jest.fn<ISajuProfileRepo["updateReportYn"]>(),
   findUserById: overrides?.findUserById ?? jest.fn<IUserRepo["findUserById"]>(),
+  calculateSaju: overrides?.calculateSaju ?? jest.fn<CalculateSajuFn>().mockReturnValue(FAKE_SAJU_OUTPUT),
 });
 
 const buildService = (overrides?: Parameters<typeof createMocks>[0]) => {
@@ -27,6 +39,7 @@ const buildService = (overrides?: Parameters<typeof createMocks>[0]) => {
     createSajuProfileService(
       mocks.create, mocks.update, mocks.findSelfProfile,
       mocks.findOtherProfiles, mocks.updateReportYn, mocks.findUserById,
+      mocks.calculateSaju,
     );
   return { mocks, saveSajuProfile, getMyProfile, getProfileList, updateReport };
 };
@@ -72,7 +85,7 @@ describe("saveSajuProfile", () => {
     expect(result).toEqual(fakeProfile);
     expect(mocks.findUserById).toHaveBeenCalledWith("1010101010");
     expect(mocks.findSelfProfile).toHaveBeenCalledWith("1010101010");
-    expect(mocks.create).toHaveBeenCalledWith({
+    expect(mocks.create).toHaveBeenCalledWith(expect.objectContaining({
       userId: "1010101010",
       isSelf: "Y",
       name: "홍길동",
@@ -83,7 +96,7 @@ describe("saveSajuProfile", () => {
       relationshipType: null,
       relationDuration: null,
       relationshipStatus: null,
-    });
+    }));
     expect(mocks.update).not.toHaveBeenCalled();
   });
 
@@ -126,7 +139,7 @@ describe("saveSajuProfile", () => {
     });
 
     expect(result).toEqual(updatedProfile);
-    expect(mocks.update).toHaveBeenCalledWith({
+    expect(mocks.update).toHaveBeenCalledWith(expect.objectContaining({
       sajuProfileId: BigInt(1),
       isSelf: "Y",
       name: "홍길동수정",
@@ -137,7 +150,7 @@ describe("saveSajuProfile", () => {
       relationshipType: null,
       relationDuration: null,
       relationshipStatus: null,
-    });
+    }));
     expect(mocks.create).not.toHaveBeenCalled();
   });
 

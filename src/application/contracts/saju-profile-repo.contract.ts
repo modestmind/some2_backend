@@ -10,6 +10,14 @@ type SajuProfileData = {
   relationshipType: string | null;
   relationDuration: string | null;
   relationshipStatus: string | null;
+  yearStem: string;
+  yearBranch: string;
+  monthStem: string;
+  monthBranch: string;
+  dayStem: string;
+  dayBranch: string;
+  hourStem: string | null;
+  hourBranch: string | null;
 };
 
 export type SajuProfileListItem = Pick<
@@ -20,6 +28,7 @@ export type SajuProfileListItem = Pick<
 export interface ISajuProfileRepo {
   findSelfProfile: (userId: string) => Promise<SajuProfile | null>;
   findOtherProfiles: (userId: string) => Promise<SajuProfileListItem[]>;
+  findProfileById: (sajuProfileId: bigint) => Promise<SajuProfile | null>;
   updateReportYn: (sajuProfileId: bigint, userId: string) => Promise<number>;
   create: (params: { userId: string } & SajuProfileData) => Promise<SajuProfile>;
   update: (params: { sajuProfileId: bigint } & SajuProfileData) => Promise<SajuProfile>;

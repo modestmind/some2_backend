@@ -1,12 +1,21 @@
 import { ISajuProfileRepo } from "../contracts/saju-profile-repo.contract.js";
 import { IUserRepo } from "../contracts/user-repo.contract.js";
 import { BusinessException } from "../../shared/exceptions/business.exception.js";
+import type { ManseInput, ManseOutput } from "../../shared/manse/manse.util.js";
 
 const CALENDAR_TYPE_MAP: Record<string, string> = {
   solar: "1",
   lunar: "2",
   lunar_leap: "3",
 };
+
+const CALENDAR_INPUT_MAP: Record<string, "solar" | "lunar" | "lunar_leap"> = {
+  solar: "solar",
+  lunar: "lunar",
+  lunar_leap: "lunar_leap",
+};
+
+type CalculateSajuFn = (input: ManseInput) => ManseOutput;
 
 export const createSajuProfileService = (
   create: ISajuProfileRepo["create"],
@@ -15,6 +24,7 @@ export const createSajuProfileService = (
   findOtherProfiles: ISajuProfileRepo["findOtherProfiles"],
   updateReportYn: ISajuProfileRepo["updateReportYn"],
   findUserById: IUserRepo["findUserById"],
+  calculateSaju: CalculateSajuFn,
 ) => {
   // 사주 프로필 저장 (is_self Y: 기존 본인 프로필 수정 또는 신규 등록, N: 무조건 신규 등록)
   const saveSajuProfile = async (params: {
@@ -39,12 +49,26 @@ export const createSajuProfileService = (
     const calendarType = CALENDAR_TYPE_MAP[params.calendarType];
 
     // 생년월일 변환
+    const [year, month, day] = params.birthDate.split("-").map(Number);
     const birthDate = new Date(params.birthDate);
 
     // 출생 시간 변환 (없는 경우 null)
     const birthTime = params.birthTime
       ? new Date(`1970-01-01T${params.birthTime}`)
       : null;
+
+    // 사주 계산
+    const timeInput = params.birthTime
+      ? { hour: parseInt(params.birthTime.slice(0, 2)), minute: parseInt(params.birthTime.slice(3, 5)) }
+      : undefined;
+    const saju = calculateSaju({
+      gender: params.gender,
+      calendar: CALENDAR_INPUT_MAP[params.calendarType],
+      year,
+      month,
+      day,
+      time: timeInput,
+    });
 
     const profileData = {
       isSelf: params.isSelf,
@@ -56,6 +80,14 @@ export const createSajuProfileService = (
       relationshipType: params.relationshipType,
       relationDuration: params.relationDuration,
       relationshipStatus: params.relationshipStatus,
+      yearStem: saju.yearPillar.stem,
+      yearBranch: saju.yearPillar.branch,
+      monthStem: saju.monthPillar.stem,
+      monthBranch: saju.monthPillar.branch,
+      dayStem: saju.dayPillar.stem,
+      dayBranch: saju.dayPillar.branch,
+      hourStem: saju.hourPillar?.stem ?? null,
+      hourBranch: saju.hourPillar?.branch ?? null,
     };
 
     // is_self Y: 기존 본인 프로필 확인 후 수정 또는 신규 등록

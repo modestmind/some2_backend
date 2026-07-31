@@ -33,6 +33,8 @@ model User {
   sajuProfile SajuProfile[]
   loginLog    UserLoginLog[]
   withdrawal  UserWithdrawal?
+  sajuReport  SajuReport[]
+  order       Order[]
 
   @@index([snsUserKey], map: "idx_user_sns_user_key")
   @@index([phoneNumber], map: "idx_user_phone_number")
@@ -56,8 +58,18 @@ model SajuProfile {
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @default(now()) @updatedAt @map("updated_at")
   reportYn           String    @default("N") @map("report_yn") @db.Char(1)
+  yearStem           String    @map("year_stem") @db.Char(1)
+  yearBranch         String    @map("year_branch") @db.Char(1)
+  monthStem          String    @map("month_stem") @db.Char(1)
+  monthBranch        String    @map("month_branch") @db.Char(1)
+  dayStem            String    @map("day_stem") @db.Char(1)
+  dayBranch          String    @map("day_branch") @db.Char(1)
+  hourStem           String?   @map("hour_stem") @db.Char(1)
+  hourBranch         String?   @map("hour_branch") @db.Char(1)
 
-  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  user       User         @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  sajuReport SajuReport[]
+  order      Order[]
 
   @@index([userId], map: "idx_saju_profile_user_id")
   @@map("saju_profile")
@@ -110,4 +122,49 @@ model CodeDetail {
 
   @@id([codeGroupId, codeKey])
   @@map("code_detail")
+}
+
+model SajuReport {
+  reportId       String   @id @default(uuid()) @map("report_id") @db.Uuid
+  sajuProfileId  BigInt   @map("saju_profile_id")
+  userId         String   @map("user_id") @db.VarChar(10)
+  reportSection1 String?  @map("report_section1") @db.Text
+  reportSection2 String?  @map("report_section2") @db.Text
+  reportSection3 String?  @map("report_section3") @db.Text
+  reportSection4 String?  @map("report_section4") @db.Text
+  reportSection5 String?  @map("report_section5") @db.Text
+  reportSection6 String?  @map("report_section6") @db.Text
+  reportSection7 String?  @map("report_section7") @db.Text
+  reportSection8 String?  @map("report_section8") @db.Text
+  reportSection9 String?  @map("report_section9") @db.Text
+  reportStatus   String   @default("A") @map("report_status") @db.Char(1)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  sajuProfile SajuProfile @relation(fields: [sajuProfileId], references: [sajuProfileId], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([sajuProfileId], map: "idx_saju_report_saju_profile_id")
+  @@index([userId], map: "idx_saju_report_user_id")
+  @@map("saju_report")
+}
+
+model Order {
+  orderId       String    @id @default(uuid()) @map("order_id") @db.Uuid
+  userId        String    @map("user_id") @db.VarChar(10)
+  sajuProfileId BigInt?   @map("saju_profile_id")
+  productName   String    @map("product_name") @db.VarChar(200)
+  paymentAmount Int       @map("payment_amount")
+  paymentMethod String?   @map("payment_method") @db.VarChar(20)
+  orderStatus   String    @default("A") @map("order_status") @db.Char(1)
+  orderedAt     DateTime  @default(now()) @map("ordered_at")
+  paidAt        DateTime? @map("paid_at")
+  pgPaymentCode String?   @map("pg_payment_code") @db.VarChar(100)
+  reportId      String?   @map("report_id") @db.Uuid
+
+  user        User         @relation(fields: [userId], references: [userId], onDelete: Restrict)
+  sajuProfile SajuProfile? @relation(fields: [sajuProfileId], references: [sajuProfileId], onDelete: SetNull)
+
+  @@index([userId], map: "idx_order_user_id")
+  @@index([sajuProfileId], map: "idx_order_saju_profile_id")
+  @@map("orders")
 }

@@ -14,7 +14,7 @@ const createMocks = (overrides?: {
   findUserBySns?: jest.Mock<IUserRepo["findUserBySns"]>;
   createUser?: jest.Mock<IUserRepo["createUser"]>;
   findMaxUserId?: jest.Mock<IUserRepo["findMaxUserId"]>;
-  findUserById?: jest.Mock<IUserRepo["findUserById"]>;
+  findUserByIdForRefresh?: jest.Mock<IUserRepo["findUserByIdForRefresh"]>;
   signJwt?: jest.Mock<IJwtUtil["signJwt"]>;
   updateRefreshToken?: jest.Mock<IUserRepo["updateRefreshToken"]>;
   updateLastLogin?: jest.Mock<IUserRepo["updateLastLogin"]>;
@@ -40,7 +40,7 @@ const createMocks = (overrides?: {
     findUserBySns: overrides?.findUserBySns ?? jest.fn<IUserRepo["findUserBySns"]>(),
     createUser: overrides?.createUser ?? jest.fn<IUserRepo["createUser"]>(),
     findMaxUserId: overrides?.findMaxUserId ?? jest.fn<IUserRepo["findMaxUserId"]>(),
-    findUserById: overrides?.findUserById ?? jest.fn<IUserRepo["findUserById"]>(),
+    findUserByIdForRefresh: overrides?.findUserByIdForRefresh ?? jest.fn<IUserRepo["findUserByIdForRefresh"]>(),
     signJwt: overrides?.signJwt ?? jest.fn<IJwtUtil["signJwt"]>().mockReturnValueOnce("fake-access-token").mockReturnValueOnce("fake-refresh-token"),
     hashUtil: fakeHashUtil,
     sha256Util: fakeSha256Util,
@@ -56,7 +56,7 @@ const buildService = (overrides?: Parameters<typeof createMocks>[0]) => {
   const mocks = createMocks(overrides);
   const { login, refreshTokens, logout } = createAuthService(
     mocks.findUserBySns, mocks.createUser, mocks.findMaxUserId,
-    mocks.findUserById, mocks.signJwt, mocks.hashUtil, mocks.sha256Util,
+    mocks.findUserByIdForRefresh, mocks.signJwt, mocks.hashUtil, mocks.sha256Util,
     mocks.createLoginLog, mocks.updateRefreshToken, mocks.updateLastLogin,
     mocks.googleAuthUtil, mocks.kakaoAuthUtil,
   );
@@ -147,7 +147,7 @@ describe("refreshTokens", () => {
   test("유효한 리프레시 토큰이면 새 액세스/리프레시 토큰과 닉네임을 반환하고 DB를 업데이트한다", async () => {
     const fakeUser = { userId: "1010101010", nickname: "테스트유저", refreshToken: "hashed-refresh-token" } as User;
     const { mocks, refreshTokens } = buildService({
-      findUserById: jest.fn<IUserRepo["findUserById"]>().mockResolvedValue(fakeUser),
+      findUserByIdForRefresh: jest.fn<IUserRepo["findUserByIdForRefresh"]>().mockResolvedValue(fakeUser),
     });
 
     const result = await refreshTokens({ userId: "1010101010", rawRefreshToken: "raw-refresh-token" });
@@ -160,7 +160,7 @@ describe("refreshTokens", () => {
   test("DB 토큰과 불일치하면 BusinessException을 던진다", async () => {
     const fakeUser = { userId: "1010101010", refreshToken: "other-hashed-token" } as User;
     const { mocks, refreshTokens } = buildService({
-      findUserById: jest.fn<IUserRepo["findUserById"]>().mockResolvedValue(fakeUser),
+      findUserByIdForRefresh: jest.fn<IUserRepo["findUserByIdForRefresh"]>().mockResolvedValue(fakeUser),
     });
 
     await expect(refreshTokens({ userId: "1010101010", rawRefreshToken: "raw-refresh-token" })).rejects.toThrow("유효하지 않은 토큰입니다.");
@@ -169,7 +169,7 @@ describe("refreshTokens", () => {
 
   test("존재하지 않는 userId면 BusinessException을 던진다", async () => {
     const { refreshTokens } = buildService({
-      findUserById: jest.fn<IUserRepo["findUserById"]>().mockResolvedValue(null),
+      findUserByIdForRefresh: jest.fn<IUserRepo["findUserByIdForRefresh"]>().mockResolvedValue(null),
     });
 
     await expect(
@@ -180,7 +180,7 @@ describe("refreshTokens", () => {
   test("DB에 저장된 리프레시 토큰이 null이면 BusinessException을 던진다", async () => {
     const fakeUser = { userId: "1010101010", refreshToken: null } as User;
     const { refreshTokens } = buildService({
-      findUserById: jest.fn<IUserRepo["findUserById"]>().mockResolvedValue(fakeUser),
+      findUserByIdForRefresh: jest.fn<IUserRepo["findUserByIdForRefresh"]>().mockResolvedValue(fakeUser),
     });
 
     await expect(

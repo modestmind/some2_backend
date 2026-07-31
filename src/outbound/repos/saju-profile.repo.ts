@@ -36,6 +36,11 @@ export const createSajuProfileRepo = (): ISajuProfileRepo => {
     });
   };
 
+  // sajuProfileId로 사주 프로필 조회
+  const findProfileById: ISajuProfileRepo["findProfileById"] = async (sajuProfileId) => {
+    return prismaClient.sajuProfile.findUnique({ where: { sajuProfileId } });
+  };
+
   // 사주 프로필 신규 저장
   const create: ISajuProfileRepo["create"] = async (params) => {
     return prismaClient.sajuProfile.create({
@@ -50,6 +55,14 @@ export const createSajuProfileRepo = (): ISajuProfileRepo => {
         relationshipType: params.relationshipType,
         relationDuration: params.relationDuration,
         relationshipStatus: params.relationshipStatus,
+        yearStem: params.yearStem,
+        yearBranch: params.yearBranch,
+        monthStem: params.monthStem,
+        monthBranch: params.monthBranch,
+        dayStem: params.dayStem,
+        dayBranch: params.dayBranch,
+        hourStem: params.hourStem,
+        hourBranch: params.hourBranch,
       },
     });
   };
@@ -68,9 +81,17 @@ export const createSajuProfileRepo = (): ISajuProfileRepo => {
         relationshipType: params.relationshipType,
         relationDuration: params.relationDuration,
         relationshipStatus: params.relationshipStatus,
+        yearStem: params.yearStem,
+        yearBranch: params.yearBranch,
+        monthStem: params.monthStem,
+        monthBranch: params.monthBranch,
+        dayStem: params.dayStem,
+        dayBranch: params.dayBranch,
+        hourStem: params.hourStem,
+        hourBranch: params.hourBranch,
       },
     });
   };
 
-  return { findSelfProfile, findOtherProfiles, updateReportYn, create, update };
+  return { findSelfProfile, findOtherProfiles, findProfileById, updateReportYn, create, update };
 };
