@@ -62,10 +62,11 @@ export const createReportService = (
     });
 
     const sections = parseReportSections(rawReport);
-    console.log("[report] sections parsed:", sections.map((s, i) => `section${i + 1}: ${s.length}자`));
+    
+    // console.log("[report] sections parsed:", sections.map((s, i) => `section${i + 1}: ${s.length}자`));
+    // console.log("[report] updateSajuReportSections 호출 시작, reportId:", reportId);
+    // try {
 
-    console.log("[report] updateSajuReportSections 호출 시작, reportId:", reportId);
-    try {
       await updateSajuReportSections({
         reportId,
         section1: sections[0],
@@ -77,11 +78,12 @@ export const createReportService = (
         section7: sections[6],
         section8: sections[7],
       });
-      console.log("[report] updateSajuReportSections 완료");
-    } catch (err) {
-      console.error("[report] updateSajuReportSections 실패:", err);
-      throw err;
-    }
+
+    //   console.log("[report] updateSajuReportSections 완료");
+    // } catch (err) {
+    //   console.error("[report] updateSajuReportSections 실패:", err);
+    //   throw err;
+    // }
 
     await updateReportYn(report.sajuProfileId, userId);
 
