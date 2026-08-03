@@ -109,6 +109,8 @@ export const createOpenAIReportUtil = (apiKey: string): IOpenAIReportUtil => {
 ===SECTION_6===
 ===SECTION_7===
 ===SECTION_8===
+
+[중요] 각 섹션 내용을 작성할때 중요한 내용이나 문구에 밑줄, 폰트색상, 텍스트배경색 변경 등 스타일을 적용 및 단락 구분 등 웹페이지에서 좀 더 보기 좋게 만들어줘. html 태그나 인라인 css를 적용해서 각 섹션의 내용을 만들어줘.
 `;
 
     const userPrompt = `아래 정보를 바탕으로 썸 손절 판별 리포트를 작성해주세요.
