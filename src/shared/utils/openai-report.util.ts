@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import type {
   IOpenAIReportUtil,
   GenerateReportParams,
@@ -110,7 +111,7 @@ export const createOpenAIReportUtil = (apiKey: string): IOpenAIReportUtil => {
 ===SECTION_7===
 ===SECTION_8===
 
-[중요] 각 섹션 내용을 작성할때 중요한 내용이나 문구에 밑줄, 폰트색상, 텍스트배경색 변경 등 스타일을 적용 및 단락 구분 등 웹페이지에서 좀 더 보기 좋게 만들어줘. html 태그나 인라인 css를 적용해서 각 섹션의 내용을 만들어줘.
+[중요] 각 섹션 내용을 작성할때 중요한 단어나 문장에 밑줄, 폰트색상, 텍스트배경색 변경 등 스타일을 적용하고, p태그로 단락 구분해서, 웹페이지에서 최대한 보기 좋게 만들어줘. html 태그나 인라인 css를 적용해서 각 섹션의 내용을 만들돼 너무 혼란스럽게는 하지 말고, 잘 정리된 느낌으로 해줘.
 `;
 
     const userPrompt = `아래 정보를 바탕으로 썸 손절 판별 리포트를 작성해주세요.
@@ -125,20 +126,50 @@ ${relationship}
 [현재 고민 상태]
 ${currentSituation}`;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      max_tokens: 2048,
-      temperature: 0.7,
-    });
+    // const completion = await openai.chat.completions.create({
+    //   model: "gpt-4o",
+    //   messages: [
+    //     { role: "system", content: systemPrompt },
+    //     { role: "user", content: userPrompt },
+    //   ],
+    //   max_tokens: 2048,
+    //   temperature: 0.7,
+    // });
 
-    const content = completion.choices[0]?.message?.content;
-    if (!content) throw new Error("OpenAI 응답에서 리포트 내용을 가져올 수 없습니다.");
+    // const content = completion.choices[0]?.message?.content;
+    // if (!content) throw new Error("OpenAI 응답에서 리포트 내용을 가져올 수 없습니다.");
 
-    return content;
+		let fullContent = "";
+		let messages: ChatCompletionMessageParam[] = [
+			{ role: "system", content: systemPrompt },
+			{ role: "user", content: userPrompt },
+		];
+
+		while (true) {
+			const completion = await openai.chat.completions.create({
+				model: "gpt-4o",
+				messages: messages,
+				// 🎯 1. 최신 SDK 권장 파라미터로 변경 및 토큰 제한을 gpt-4o 최대치(16384)로 확장
+				max_completion_tokens: 16384, 
+				temperature: 0.7,
+			});
+
+			const choice = completion.choices[0];
+			const responseText = choice.message.content || "";
+			
+			fullContent += responseText;
+
+			// 🎯 2. 토큰 제한으로 인해 중간에 짤렸다면("length") 대화 이력을 이어붙여 연속 호출
+			if (choice.finish_reason === "length") {
+				messages.push({ role: "assistant", content: responseText });
+				messages.push({ role: "user", content: "이어서 계속 작성해줘." });
+			} else {
+				// 정상 종료("stop")되면 루프 탈출
+				break; 
+			}
+		}
+
+    return fullContent;
   };
 
   return { generateReport };
