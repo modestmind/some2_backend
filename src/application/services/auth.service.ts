@@ -47,6 +47,7 @@ export const createAuthService = (
     // SNS 정보로 기존 회원 조회
     const foundUser = await findUserBySns(sns_provider_code, sns_user_key);
 
+    const isNewUser = !foundUser;
     let user = foundUser;
     if (!user) {
       // 신규 회원 생성
@@ -76,7 +77,7 @@ export const createAuthService = (
 
     await createLoginLog({ userId: user.userId, loginIp, loggedAt: getKstNow() });
 
-    return { accessToken, refreshToken, nickname };
+    return { accessToken, refreshToken, nickname, isNewUser };
   };
 
   const refreshTokens = async (params: { userId: string; rawRefreshToken: string }) => {

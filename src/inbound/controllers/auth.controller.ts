@@ -29,11 +29,11 @@ export const createAuthController = (
     }
 
     try {
-      const { accessToken, refreshToken, nickname } = await login({ ...data, loginIp: req.ip ?? "" });
+      const { accessToken, refreshToken, nickname, isNewUser } = await login({ ...data, loginIp: req.ip ?? "" });
 
       // 리프레시 토큰은 httpOnly 쿠키로 전달
       res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, { ...REFRESH_TOKEN_COOKIE_OPTIONS });
-      return res.json({ token: accessToken, nickname });
+      return res.json({ token: accessToken, nickname, isNewUser });
 
     } catch (err) {
       if (err instanceof BusinessException) {
